@@ -1,0 +1,10 @@
+version: '2.2'
+services:
+  producer:
+    build: ./producer
+    ports:
+      - 5000:5000
+  consumer:
+    build: ./consumer
+
+
