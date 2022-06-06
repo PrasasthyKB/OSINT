@@ -1,0 +1,3 @@
+Scrapy
+scrapy-rotating-proxies
+html2text
