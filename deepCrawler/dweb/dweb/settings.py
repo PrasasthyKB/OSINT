@@ -32,6 +32,7 @@ ROBOTSTXT_OBEY = False
 #CONCURRENT_REQUESTS_PER_IP = 16
 
 CRAWLING_SESSION = str(random.randint(100000, 999999))
+JOBDIR = "/usr/src/jobs/"
 
 BANNED_DOMAINS = []
 response = requests.get('https://ahmia.fi/banned/')
