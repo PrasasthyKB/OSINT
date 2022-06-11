@@ -15,4 +15,5 @@ COPY dweb .
 COPY proxy-list.txt ./
  
 # Run the crawler when the container launches.
+#CMD [ "scrapy", "crawl", "ahmia", "-s JOBDIR=/tmp/scrapy/jobs/"]
 CMD [ "scrapy", "crawl", "ahmia"]

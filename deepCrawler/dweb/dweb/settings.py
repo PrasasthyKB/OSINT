@@ -33,7 +33,7 @@ ROBOTSTXT_OBEY = False
 #CONCURRENT_REQUESTS_PER_IP = 16
 
 CRAWLING_SESSION = str(random.randint(100000, 999999))
-#JOBDIR = "/usr/src/jobs/"
+#JOBDIR = "/tmp/scrapy/jobs/"
 
 BANNED_DOMAINS = []
 response = requests.get('https://ahmia.fi/banned/')
@@ -110,7 +110,7 @@ KAFKA_TOPIC = "IoCPagesTest"
 #AUTOTHROTTLE_TARGET_CONCURRENCY = 1.0
 # Enable showing throttling stats for every response received:
 #AUTOTHROTTLE_DEBUG = False
-
+#DUPEFILTER_DEBUG = True
 # Enable and configure HTTP caching (disabled by default)
 # See https://docs.scrapy.org/en/latest/topics/downloader-middleware.html#httpcache-middleware-settings
 #HTTPCACHE_ENABLED = True
