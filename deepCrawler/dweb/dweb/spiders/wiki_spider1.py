@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 
 import scrapy
-import html2text, re
+import html2text
+import re
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import CrawlSpider, Rule
 from scrapy.selector import Selector
@@ -28,8 +29,9 @@ IGNORED_EXTENSIONS = [
     'odp',
 
     # other
-    'css', 'pdf', 'exe', 'bin', 'rss', 'dmg', 'iso', 'apk','sig'
+    'css', 'pdf', 'exe', 'bin', 'rss', 'dmg', 'iso', 'apk', 'sig'
 ]
+
 
 class WikiSpider1(CrawlSpider):
 
@@ -37,11 +39,16 @@ class WikiSpider1(CrawlSpider):
 
     allowed_domains = ["onion"]
     start_urls = [
-            "http://paavlaytlfsqyvkg3yqj7hflfg5jw2jdg2fgkza5ruf6lplwseeqtvyd.onion"
+        "http://paavlaytlfsqyvkg3yqj7hflfg5jw2jdg2fgkza5ruf6lplwseeqtvyd.onion"
     ]
 
     rules = (
-        Rule(LxmlLinkExtractor(allow=(),deny_extensions=IGNORED_EXTENSIONS), callback="parse_item", follow=True),
+        Rule(
+            LxmlLinkExtractor(
+                allow=(),
+                deny_extensions=IGNORED_EXTENSIONS),
+            callback="parse_item",
+            follow=True),
     )
 
     def parse_item(self, response):

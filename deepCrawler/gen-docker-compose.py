@@ -10,7 +10,7 @@ with open("docker-compose.yml", "w") as f:
     f.write("version: '3'\n\nservices:\n")
 
     for index in range(NUM_PROXIES):
-        name = "privoxy"+str(index)
+        name = "privoxy" + str(index)
         f.write(f"  {name}:\n")
         f.write(f"    container_name: '{name}'\n")
         f.write("    image: 'pickapp/tor-proxy:latest'\n")
@@ -26,7 +26,7 @@ with open("docker-compose.yml", "w") as f:
     f.write("      - scrapyVol:/usr/src/jobs/\n")
     f.write("    depends_on:\n")
     for index in range(NUM_PROXIES):
-        name = "privoxy"+str(index)
+        name = "privoxy" + str(index)
         f.write(f'      - "{name}"\n')
 
     f.write("volumes:\n")
@@ -35,7 +35,7 @@ with open("docker-compose.yml", "w") as f:
 #
 with open("proxy-list.txt", "w") as f:
     f.write(WARNING)
-    
+
     for index in range(NUM_PROXIES):
-        name = "privoxy"+str(index)
+        name = "privoxy" + str(index)
         f.write(f'http://{name}:8888\n')
