@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
 
 import scrapy
-import html2text, re
+import html2text
+import re
+import datetime
+
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import CrawlSpider, Rule
 from scrapy.selector import Selector
@@ -28,8 +31,9 @@ IGNORED_EXTENSIONS = [
     'odp',
 
     # other
-    'css', 'pdf', 'exe', 'bin', 'rss', 'dmg', 'iso', 'apk','sig'
+    'css', 'pdf', 'exe', 'bin', 'rss', 'dmg', 'iso', 'apk', 'sig'
 ]
+
 
 class AhmiaSpider(CrawlSpider):
 
@@ -37,11 +41,13 @@ class AhmiaSpider(CrawlSpider):
 
     allowed_domains = ["onion"]
     start_urls = [
-        "https://ahmia.fi/address/"  # "https://ahmia.fi/address/" #"http://check.torproject.org/"
+        # "https://ahmia.fi/address/" #"http://check.torproject.org/"
+        "https://ahmia.fi/address/"
     ]
 
     rules = (
-        Rule(LxmlLinkExtractor(allow=(),deny_extensions=IGNORED_EXTENSIONS), callback="parse_item", follow=True),
+        Rule(LxmlLinkExtractor(allow=(), deny_extensions=IGNORED_EXTENSIONS),
+             callback="parse_item", follow=True),
     )
 
     def parse_item(self, response):
@@ -65,9 +71,13 @@ class AhmiaSpider(CrawlSpider):
         title = ' '.join(title_list)
         item['title'] = title
         body_text = self.html2string(response)
-        words = self.extract_words(body_text)
-        item['text'] = title + " " + " ".join(words)
+        #words = self.extract_words(body_text)
+        #item['text'] = title + " " + " ".join(words)
+        item['text'] = body_text
+
         item['spider_name'] = self.name
+        item['date_inserted'] = str(
+            datetime.datetime.now().replace(microsecond=0))
         return item
 
     def detect_encoding(self, response):

@@ -6,7 +6,8 @@
 #     https://docs.scrapy.org/en/latest/topics/settings.html
 #     https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
 #     https://docs.scrapy.org/en/latest/topics/spider-middleware.html
-import random, requests
+import random
+import requests
 
 BOT_NAME = 'dweb'
 
@@ -32,12 +33,12 @@ ROBOTSTXT_OBEY = False
 #CONCURRENT_REQUESTS_PER_IP = 16
 
 CRAWLING_SESSION = str(random.randint(100000, 999999))
-JOBDIR = "/usr/src/jobs/"
+#JOBDIR = "/usr/src/jobs/"
 
 BANNED_DOMAINS = []
 response = requests.get('https://ahmia.fi/banned/')
 for md5 in response.text.split("\n"):
-    if len(md5) is 32:
+    if len(md5) == 32:
         BANNED_DOMAINS.append(md5)
 
 USER_AGENT_LIST = [
@@ -57,22 +58,22 @@ COOKIES_ENABLED = False
 #TELNETCONSOLE_ENABLED = False
 
 # Override the default request headers:
-#DEFAULT_REQUEST_HEADERS = {
+# DEFAULT_REQUEST_HEADERS = {
 #   'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
 #   'Accept-Language': 'en',
-#}
+# }
 
 # Enable or disable spider middlewares
 # See https://docs.scrapy.org/en/latest/topics/spider-middleware.html
-#SPIDER_MIDDLEWARES = {
+# SPIDER_MIDDLEWARES = {
 #    'dweb.middlewares.DwebSpiderMiddleware': 543,
-#}
+# }
 
 # Enable or disable downloader middlewares
 # See https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
-#DOWNLOADER_MIDDLEWARES = {
+# DOWNLOADER_MIDDLEWARES = {
 #    'dweb.middlewares.DwebDownloaderMiddleware': 543,
-#}
+# }
 DOWNLOADER_MIDDLEWARES = {
     'dweb.middlewares.RandomUserAgentMiddleware': 400,
     'rotating_proxies.middlewares.RotatingProxyMiddleware': 610,
@@ -85,15 +86,17 @@ ROTATING_PROXY_PAGE_RETRY_TIMES = 5
 
 # Enable or disable extensions
 # See https://docs.scrapy.org/en/latest/topics/extensions.html
-#EXTENSIONS = {
+# EXTENSIONS = {
 #    'scrapy.extensions.telnet.TelnetConsole': None,
-#}
+# }
 
 # Configure item pipelines
 # See https://docs.scrapy.org/en/latest/topics/item-pipeline.html
 ITEM_PIPELINES = {
     'dweb.pipelines.DwebPipeline': 300,
 }
+KAFKA_SERVER = "kafka:9092"
+KAFKA_TOPIC = "IoC"
 
 # Enable and configure the AutoThrottle extension (disabled by default)
 # See https://docs.scrapy.org/en/latest/topics/autothrottle.html

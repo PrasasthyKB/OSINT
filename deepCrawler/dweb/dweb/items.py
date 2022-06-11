@@ -19,8 +19,4 @@ class DwebItem(scrapy.Item):
     server_header = Field()
     text = Field()
     date_inserted = Field()
-    id = Field()
-    django_ct = Field()
-    django_id = Field()
-    crawling_session = Field()
     spider_name = Field()

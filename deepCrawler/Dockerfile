@@ -15,4 +15,4 @@ COPY dweb .
 COPY proxy-list.txt ./
  
 # Run the crawler when the container launches.
-CMD [ "python3", "run_spiders.py" ]
+CMD [ "scrapy", "crawl", "ahmia"]
