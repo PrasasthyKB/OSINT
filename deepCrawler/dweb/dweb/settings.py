@@ -95,8 +95,8 @@ ROTATING_PROXY_PAGE_RETRY_TIMES = 5
 ITEM_PIPELINES = {
     'dweb.pipelines.DwebPipeline': 300,
 }
-KAFKA_SERVER = "kafka:9092"
-KAFKA_TOPIC = "IoC"
+KAFKA_SERVER = "128.214.254.195:9093"
+KAFKA_TOPIC = "IoCPagesTest"
 
 # Enable and configure the AutoThrottle extension (disabled by default)
 # See https://docs.scrapy.org/en/latest/topics/autothrottle.html
