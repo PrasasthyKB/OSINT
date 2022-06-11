@@ -2,5 +2,3 @@ Scrapy
 scrapy-rotating-proxies
 html2text
 kafka-python
-transformers
-torch

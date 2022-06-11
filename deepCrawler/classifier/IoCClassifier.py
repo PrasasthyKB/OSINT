@@ -9,6 +9,7 @@ from kafka import KafkaConsumer, KafkaProducer
 
 CONSUME_TOPIC_NAME = "IoCPagesTest"
 PRODUCE_TOPIC_NAME = "IoCRelevants"
+CONSUMER_GROUP = "DwebClassifier"
 KAFKA_SERVER = "128.214.254.195:9093"
 
 PATH_TO_MODEL = "model_checkpoints/multi-512-20-balanced.pt"
@@ -40,7 +41,7 @@ class BertClassifier(nn.Module):
 
 if __name__ == "__main__":
     consumer = KafkaConsumer(CONSUME_TOPIC_NAME, bootstrap_servers=KAFKA_SERVER, value_deserializer=lambda m: json.loads(
-        m.decode('utf-8')), auto_offset_reset='earliest', consumer_timeout_ms=5000)
+        m.decode('utf-8')), auto_offset_reset='earliest', group_id=CONSUMER_GROUP)
     producer = KafkaProducer(bootstrap_servers=KAFKA_SERVER)
 
     use_cuda = torch.cuda.is_available()
@@ -64,7 +65,6 @@ if __name__ == "__main__":
 
             output = model(input_id, mask)
             pred = output.argmax(dim=1).int()
-            print(pred)
             if pred:
                 json_payload = json.dumps(data.value)
                 json_payload = str.encode(json_payload)
