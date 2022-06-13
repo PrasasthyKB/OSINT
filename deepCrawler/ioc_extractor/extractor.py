@@ -12,7 +12,7 @@ CONSUMER_GROUP = "DwebClassifier"
 KAFKA_SERVER = "128.214.254.195:9093"
 
 consumer = KafkaConsumer(CONSUME_TOPIC_NAME, bootstrap_servers=KAFKA_SERVER, value_deserializer=lambda m: json.loads(
-    m.decode('utf-8')), auto_offset_reset='earliest')
+    m.decode('utf-8')), auto_offset_reset='earliest', consumer_group=CONSUMER_GROUP)
 producer = KafkaProducer(bootstrap_servers=KAFKA_SERVER)
 
 for data in consumer:
@@ -93,11 +93,14 @@ for data in consumer:
         except ValueError:
             continue
         # Skip if url is in the same domain as current page
-        if url_domain == urlparse(r.url).netloc:
+        if url_domain == urlparse(data.value["url"]).netloc:
             print(f"Found url with same domain: {url}")
             continue
         iocs.append({'url': {"domain": url_domain, "ioc": url}})
 
+    # Skip if no IoCs found
+    if len(iocs) == 0:
+        continue
     # Remove duplicates
     unique_iocs_set = set()
     unique_iocs_list = []
