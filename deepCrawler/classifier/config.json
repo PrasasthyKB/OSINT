@@ -1,0 +1,12 @@
+{
+  "KAFKA_SERVER": "128.214.254.195:9093",
+  "KAFKA_CONSUME_TOPIC_NAME": "IoCPagesTest",
+  "KAFKA_PRODUCE_TOPIC_NAME": "IoCRelevants",
+  "KAFKA_CONSUMER_GROUP": "DwebClassifier1",
+  "BASE_MODEL_NAME": "bert-base-multilingual-cased",
+  "TOKENIZER_NAME": "bert-base-multilingual-cased",
+  "MODEL_FILE_PATH": "multi-512-20-balanced.pt",
+  "S3_REGION": "eu-central-1",
+  "S3_BUCKET_NAME": "thor-infra",
+  "S3_MODEL_PATH": "crawl-models/multi-512-20-balanced.pt"
+}

@@ -1,5 +1,5 @@
 import json
-import configparser
+import os
 
 import torch
 from torch import nn
@@ -9,18 +9,18 @@ from transformers import BertTokenizer, BertModel, BertConfig
 from kafka import KafkaConsumer, KafkaProducer
 import boto3
 
-CONSUME_TOPIC_NAME = "IoCPagesTest"
-PRODUCE_TOPIC_NAME = "IoCRelevants"
-CONSUMER_GROUP = "DwebClassifier1"
-KAFKA_SERVER = "128.214.254.195:9093"
+AWS_CREDS_PATH = "/run/secrets/aws_creds.json"
+CONFIG_PATH = "config.json"
 
-AWS_CREDS_PATH = "/run/secrets/aws_creds"
-MODEL_PATH = "model_checkpoints/multi-512-20-balanced.pt"
+with open(AWS_CREDS_PATH, 'r') as f:
+    aws_config = json.loads(f.read())
 
-aws_configs = configparser.ConfigParser()
-aws_configs.read(AWS_CREDS_PATH)
+with open(CONFIG_PATH, 'r') as f:
+    config = json.loads(f.read())
 
-tokenizer = BertTokenizer.from_pretrained('bert-base-multilingual-cased')
+MODEL_PATH = os.path.join("model_checkpoints/", config["MODEL_FILE_PATH"])
+
+tokenizer = BertTokenizer.from_pretrained(config["TOKENIZER_NAME"])
 
 
 class BertClassifier(nn.Module):
@@ -29,7 +29,7 @@ class BertClassifier(nn.Module):
 
         super(BertClassifier, self).__init__()
 
-        self.bert = BertModel.from_pretrained('bert-base-multilingual-cased')
+        self.bert = BertModel.from_pretrained(config["BASE_MODEL_NAME"])
         self.dropout = nn.Dropout(dropout)
         self.linear = nn.Linear(768, 2)
         self.relu = nn.ReLU()
@@ -47,23 +47,26 @@ class BertClassifier(nn.Module):
 
 if __name__ == "__main__":
     consumer = KafkaConsumer(
-        CONSUME_TOPIC_NAME, bootstrap_servers=KAFKA_SERVER,
+        config["KAFKA_CONSUME_TOPIC_NAME"],
+        bootstrap_servers=config["KAFKA_SERVER"],
         value_deserializer=lambda m: json.loads(m.decode('utf-8')),
-        auto_offset_reset='earliest', group_id=CONSUMER_GROUP)
-    producer = KafkaProducer(bootstrap_servers=KAFKA_SERVER)
+        auto_offset_reset='earliest', group_id=config["KAFKA_CONSUMER_GROUP"])
+    producer = KafkaProducer(bootstrap_servers=config["KAFKA_SERVER"])
 
     use_cuda = torch.cuda.is_available()
     device = torch.device("cuda" if use_cuda else "cpu")
 
     s3 = boto3.client(
         's3',
-        region_name='eu-central-1',
-        aws_access_key_id=aws_configs["AWS_CREDENTIALS"]["ACCESS_KEY_ID"],
-        aws_secret_access_key=aws_configs["AWS_CREDENTIALS"]["ACCESS_TOKEN"]
+        region_name=config["S3_REGION"],
+        aws_access_key_id=aws_config["ACCESS_KEY_ID"],
+        aws_secret_access_key=aws_config["ACCESS_TOKEN"]
     )
     with open(MODEL_PATH, 'wb') as f:
-        s3.download_fileobj('thor-infra',
-                            'crawl-models/multi-512-20-balanced.pt', f)
+        s3.download_fileobj(
+            config["S3_BUCKET_NAME"],
+            config["S3_MODEL_PATH"],
+            f)
 
     if use_cuda:
         model = model.cuda()
@@ -75,7 +78,7 @@ if __name__ == "__main__":
 
     with torch.no_grad():
         for data in consumer:
-            print("Got data")
+            print("Received data...")
             text = data.value["text"]
             tokenized = tokenizer(
                 text, padding='max_length', max_length=512, truncation=True,
@@ -88,5 +91,5 @@ if __name__ == "__main__":
             if pred:
                 json_payload = json.dumps(data.value)
                 json_payload = str.encode(json_payload)
-                producer.send(PRODUCE_TOPIC_NAME, json_payload)
+                producer.send(config["KAFKA_PRODUCE_TOPIC_NAME"], json_payload)
                 producer.flush()

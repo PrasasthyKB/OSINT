@@ -4,9 +4,10 @@ services:
   ioc_classifier:
     build: .
     secrets:
-      - aws_creds
+      - source: aws_creds
+        target: aws_creds.json
 
 secrets:
   aws_creds:
-    file: aws_creds.ini
+    file: aws_creds.json
 

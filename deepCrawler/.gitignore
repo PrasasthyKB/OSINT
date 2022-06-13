@@ -168,4 +168,4 @@ proxy-list.txt
 *.nvimrc
 
 # AWS creds files
-aws_creds.ini
+aws_creds.json
