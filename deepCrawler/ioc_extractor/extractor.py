@@ -12,9 +12,10 @@ CONSUMER_GROUP = "DwebClassifier"
 KAFKA_SERVER = "128.214.254.195:9093"
 
 consumer = KafkaConsumer(CONSUME_TOPIC_NAME, bootstrap_servers=KAFKA_SERVER, value_deserializer=lambda m: json.loads(
-    m.decode('utf-8')), auto_offset_reset='earliest', consumer_group=CONSUMER_GROUP)
+    m.decode('utf-8')), auto_offset_reset='earliest', group_id=CONSUMER_GROUP)
 producer = KafkaProducer(bootstrap_servers=KAFKA_SERVER)
 
+print("Starting data consumption...")
 for data in consumer:
     text = data.value["text"]
     iocs = []
