@@ -3,3 +3,10 @@ version: '3'
 services:
   ioc_classifier:
     build: .
+    secrets:
+      - aws_creds
+
+secrets:
+  aws_creds:
+    file: aws_creds.ini
+

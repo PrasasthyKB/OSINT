@@ -164,5 +164,8 @@ cython_debug/
 /docker-compose.yml
 proxy-list.txt
 
-#Neovim project config file
+# Neovim project config file
 *.nvimrc
+
+# AWS creds files
+aws_creds.ini
