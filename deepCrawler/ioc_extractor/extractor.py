@@ -1,12 +1,17 @@
 import json
 import ipaddress
 import itertools
+import datetime
 from urllib.parse import urlparse
+from uuid import uuid4
 
 from kafka import KafkaConsumer, KafkaProducer
+from elasticsearch import Elasticsearch
+
 import iocextract
 
 CONFIG_PATH = "config.json"
+
 
 with open(CONFIG_PATH, 'r') as f:
     config = json.loads(f.read())
@@ -16,7 +21,13 @@ consumer = KafkaConsumer(
     bootstrap_servers=config["KAFKA_SERVER"],
     value_deserializer=lambda m: json.loads(m.decode('utf-8')),
     auto_offset_reset='earliest', group_id=config["KAFKA_CONSUMER_GROUP"])
+
 producer = KafkaProducer(bootstrap_servers=config["KAFKA_SERVER"])
+
+es = Elasticsearch(
+    config["ELASTICSEARCH_SERVER"])
+#   basic_auth=("elastic", "SHDJk3x-9CYpsQM6+Yho"),
+#   ca_certs="http_ca.crt", verify_certs=False)
 
 print("Starting data consumption...")
 for data in consumer:
@@ -115,8 +126,24 @@ for data in consumer:
 
     payload = {key: data.value[key]
                for key in ["url", "spider_name", "date_inserted"]}
+    # Rename timestamp field for elasticsearch
+    payload['@timestamp'] = datetime.datetime.fromisoformat(
+        payload["date_inserted"]).isoformat()
+    del payload["date_inserted"]
+
     payload["iocs"] = unique_iocs_list
+
+    # Send data to Kafka
     json_payload = json.dumps(payload)
     json_payload = str.encode(json_payload)
     producer.send(config["KAFKA_PRODUCE_TOPIC_NAME"], json_payload)
     producer.flush()
+
+    # Send data to ElasticSearch
+    print("Sending data to ES...")
+    try:
+        res = es.index(
+            index=config["ELASTICSEARCH_INDEX_NAME"], id=str(uuid4()),
+            document=json_payload)
+    except Exception as e:
+        print('Error : ', e)
