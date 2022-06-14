@@ -7,6 +7,7 @@ COPY requirements.txt ./
 RUN pip3 install --no-cache-dir -r requirements.txt
 
 COPY extractor.py .
+COPY config.json .
 
 ENV PYTHONUNBUFFERED=1
 

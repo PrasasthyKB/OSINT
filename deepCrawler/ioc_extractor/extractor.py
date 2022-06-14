@@ -6,14 +6,17 @@ from urllib.parse import urlparse
 from kafka import KafkaConsumer, KafkaProducer
 import iocextract
 
-CONSUME_TOPIC_NAME = "IoCRelevants"
-PRODUCE_TOPIC_NAME = "DwebIoCs"
-CONSUMER_GROUP = "DwebClassifier"
-KAFKA_SERVER = "128.214.254.195:9093"
+CONFIG_PATH = "config.json"
 
-consumer = KafkaConsumer(CONSUME_TOPIC_NAME, bootstrap_servers=KAFKA_SERVER, value_deserializer=lambda m: json.loads(
-    m.decode('utf-8')), auto_offset_reset='earliest', group_id=CONSUMER_GROUP)
-producer = KafkaProducer(bootstrap_servers=KAFKA_SERVER)
+with open(CONFIG_PATH, 'r') as f:
+    config = json.loads(f.read())
+
+consumer = KafkaConsumer(
+    config["KAFKA_CONSUME_TOPIC_NAME"],
+    bootstrap_servers=config["KAFKA_SERVER"],
+    value_deserializer=lambda m: json.loads(m.decode('utf-8')),
+    auto_offset_reset='earliest', group_id=config["KAFKA_CONSUMER_GROUP"])
+producer = KafkaProducer(bootstrap_servers=config["KAFKA_SERVER"])
 
 print("Starting data consumption...")
 for data in consumer:
@@ -115,5 +118,5 @@ for data in consumer:
     payload["iocs"] = unique_iocs_list
     json_payload = json.dumps(payload)
     json_payload = str.encode(json_payload)
-    producer.send(PRODUCE_TOPIC_NAME, json_payload)
+    producer.send(config["KAFKA_PRODUCE_TOPIC_NAME"], json_payload)
     producer.flush()

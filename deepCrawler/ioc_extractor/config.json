@@ -1,0 +1,6 @@
+{
+  "KAFKA_SERVER": "128.214.254.195:9093",
+  "KAFKA_CONSUME_TOPIC_NAME": "IoCRelevants",
+  "KAFKA_PRODUCE_TOPIC_NAME": "DwebIoCs",
+  "KAFKA_CONSUMER_GROUP": "DwebExtractor"
+}
