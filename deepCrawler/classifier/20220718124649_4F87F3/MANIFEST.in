@@ -1,0 +1,2 @@
+include Text_classification/bentoml.yml
+graft Text_classification/artifacts

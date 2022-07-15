@@ -2,3 +2,5 @@ kafka-python
 transformers
 torch
 boto3
+iocextract
+elasticsearch

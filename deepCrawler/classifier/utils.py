@@ -1,40 +1,25 @@
-import json
 import ipaddress
 import itertools
-import datetime
 from urllib.parse import urlparse
-from uuid import uuid4
-
-from kafka import KafkaConsumer, KafkaProducer
-from elasticsearch import Elasticsearch
 
 import iocextract
 
-CONFIG_PATH = "config.json"
+
+def get_unique_iocs(iocs):
+    unique_iocs_set = set()
+    unique_iocs_list = []
+    for record in iocs:
+        if record['value'] not in unique_iocs_set:
+            unique_iocs_set.add(record['value'])
+            unique_iocs_list.append(record)
+    return unique_iocs_list
 
 
-with open(CONFIG_PATH, 'r') as f:
-    config = json.loads(f.read())
-
-consumer = KafkaConsumer(
-    config["KAFKA_CONSUME_TOPIC_NAME"],
-    bootstrap_servers=config["KAFKA_SERVER"],
-    value_deserializer=lambda m: json.loads(m.decode('utf-8')),
-    auto_offset_reset='earliest', group_id=config["KAFKA_CONSUMER_GROUP"])
-
-producer = KafkaProducer(bootstrap_servers=config["KAFKA_SERVER"])
-
-es = Elasticsearch(
-    config["ELASTICSEARCH_SERVER"])
-#   basic_auth=("elastic", "SHDJk3x-9CYpsQM6+Yho"),
-#   ca_certs="http_ca.crt", verify_certs=False)
-
-print("Starting data consumption...")
-for data in consumer:
-    text = data.value["text"]
-    iocs = []
+def extract_iocs(text, crawled_url):
+    iocs = {}
 
     # Extract hashes
+    hashes = []
     for hash_ in iocextract.extract_hashes(text):
 
         hash_type = 'misc.'
@@ -47,17 +32,23 @@ for data in consumer:
         elif len(hash_) == 128:
             hash_type = "SHA512"
 
-        iocs.append({'hash': {"hash_type": hash_type, "ioc": hash_}})
+        hashes.append({"type": hash_type, "value": hash_})
+    iocs["hash"] = get_unique_iocs(hashes)
 
     # Extract YARA rules
+    yaras = []
     for yara in iocextract.extract_yara_rules(text):
-        iocs.append({'yara': {"ioc": yara}})
+        yaras.append({"value": yara})
+    iocs["yara"] = get_unique_iocs(yaras)
 
     # Extract emails
+    emails = []
     for email in iocextract.extract_emails(text, refang=True):
-        iocs.append({'email': {"ioc": email}})
+        emails.append({"value": email})
+    iocs["email"] = get_unique_iocs(emails)
 
     # Extract IPs
+    ips = []
     for ip_addr in iocextract.extract_ips(text):
 
         # Skip if ip is not defanged
@@ -76,9 +67,11 @@ for data in consumer:
             except ValueError:
                 print(f"ip {ip_addr} format not recognized!")
                 continue
-        iocs.append({'ip': {"ver": ip_ver, "ioc": str(ip_addr)}})
+        ips.append({"ip_version": ip_ver, "value": str(ip_addr)})
+    iocs["ip_addresses"] = get_unique_iocs(ips)
 
     # Extract URLs
+    url_iocs = []
     urls = itertools.chain(
         iocextract.extract_unencoded_urls(text),
         iocextract.extract_encoded_urls(text, refang=True),
@@ -108,42 +101,20 @@ for data in consumer:
         except ValueError:
             continue
         # Skip if url is in the same domain as current page
-        if url_domain == urlparse(data.value["url"]).netloc:
+        if url_domain == urlparse(crawled_url).netloc:
             print(f"Found url with same domain: {url}")
             continue
-        iocs.append({'url': {"domain": url_domain, "ioc": url}})
+        url_iocs.append({"url_domain": url_domain, "value": url})
+    iocs["url"] = get_unique_iocs(url_iocs)
 
-    # Skip if no IoCs found
-    if len(iocs) == 0:
-        continue
+    ioc_found = False
+    for key, value in iocs.items():
+        if len(value) != 0:
+            ioc_found = True
+            break
+    # Return None if no IoCs found
+    if not ioc_found:
+        return None
     # Remove duplicates
-    unique_iocs_set = set()
-    unique_iocs_list = []
-    for record in iocs:
-        if list(record.values())[0]['ioc'] not in unique_iocs_set:
-            unique_iocs_set.add(list(record.values())[0]['ioc'])
-            unique_iocs_list.append(record)
 
-    payload = {key: data.value[key]
-               for key in ["url", "spider_name", "date_inserted"]}
-    # Rename timestamp field for elasticsearch
-    payload['@timestamp'] = datetime.datetime.fromisoformat(
-        payload["date_inserted"]).isoformat()
-    del payload["date_inserted"]
-
-    payload["iocs"] = unique_iocs_list
-
-    # Send data to Kafka
-    json_payload = json.dumps(payload)
-    json_payload = str.encode(json_payload)
-    producer.send(config["KAFKA_PRODUCE_TOPIC_NAME"], json_payload)
-    producer.flush()
-
-    # Send data to ElasticSearch
-    print("Sending data to ES...")
-    try:
-        res = es.index(
-            index=config["ELASTICSEARCH_INDEX_NAME"], id=str(uuid4()),
-            document=json_payload)
-    except Exception as e:
-        print('Error : ', e)
+    return iocs

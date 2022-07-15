@@ -10,10 +10,12 @@ COPY requirements.txt ./
 # Install dependecies specified in requirements.txt.
 RUN pip3 install --no-cache-dir -r requirements.txt
 
+ADD "20220718124649_4F87F3" ./20220718124649_4F87F3
+RUN pip install "./20220718124649_4F87F3"
 # Copy the project source code from the local host to the filesystem of the container at the working directory.
 COPY IoCClassifier.py .
+COPY utils.py .
 COPY config.json .
-RUN mkdir model_checkpoints
 #COPY ./model_checkpoints ./model_checkpoints
 
 ENV PYTHONUNBUFFERED=1

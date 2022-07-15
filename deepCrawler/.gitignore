@@ -169,3 +169,6 @@ proxy-list.txt
 
 # AWS creds files
 aws_creds.json
+
+# Ignore ioc_extractor since it was moved to classifier
+ioc_extractor/

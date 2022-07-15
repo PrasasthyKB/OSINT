@@ -1,0 +1,6 @@
+bentoml==0.13.1
+transformers==4.20.1
+iocextract
+regex==2022.7.9
+pandas
+protobuf==3.20
